@@ -52,6 +52,14 @@ const companionDefaults = {
   socialMin: 93, // minutes in social apps today
   socialLimit: 120,
   blockedOpens: 0, // times a blocked app was opened before 18:00
+  screenMin: 168, // total screen time today so far
+  pickups: 58,
+  focusMin: 0, // minutes in finished focus sessions today
+  focusEndsAt: null, // timestamp while a focus session runs
+  focusLen: 25,
+  activitiesDone: [],
+  overrides: [], // limited apps opened anyway
+  reflections: [],
   ledger: [{ id: 1, label: 'Welcome bonus', amount: 120, at: '09:00' }],
 };
 
@@ -88,6 +96,27 @@ export const useCompanionStore = create(
         if (get().steps >= 6000 && !get().goalsDone.includes(goal.id)) { get().completeGoal(goal); return true; }
         return false;
       },
+      startFocus: (len) => set({ focusEndsAt: Date.now() + len * 60000, focusLen: len }),
+      stopFocus: () => set({ focusEndsAt: null }),
+      finishFocus: () => {
+        const len = get().focusLen;
+        set((s) => ({ focusEndsAt: null, focusMin: s.focusMin + len }));
+        get().earn(len >= 50 ? 40 : 20, `Focus session: ${len} min`);
+        get().completeGoal(GOALS.find((g) => g.id === 'g-focus'));
+      },
+      doActivity: (a) => {
+        if (get().activitiesDone.includes(a.id)) return false;
+        set((s) => ({ activitiesDone: [...s.activitiesDone, a.id] }));
+        get().earn(a.reward, `Offline: ${a.title}`);
+        return true;
+      },
+      openAnyway: (app) =>
+        set((s) => ({
+          blockedOpens: s.blockedOpens + 1,
+          screenMin: s.screenMin + 5,
+          overrides: [{ id: Date.now(), app, at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) }, ...s.overrides],
+        })),
+      addReflection: (r) => set((s) => ({ reflections: [{ id: Date.now(), ...r }, ...s.reflections] })),
       /* End of day: if goals were met, the remaining measured goals pay out, then a new day starts. */
       advanceDay: (metGoals) => {
         if (metGoals) GOALS.forEach((g) => get().completeGoal(g));
@@ -98,6 +127,10 @@ export const useCompanionStore = create(
           steps: 0,
           socialMin: 0,
           blockedOpens: 0,
+          screenMin: 0,
+          pickups: 0,
+          focusMin: 0,
+          activitiesDone: [],
         }));
       },
       resetCompanion: () => set({ ...companionDefaults, theme: get().theme }),
@@ -115,6 +148,7 @@ const sessionDefaults = {
   checkins: [], // booth ids
   collectibles: ['c-starter'],
   squad: null,
+  detox: null, // { objectives, estimate, problems, acknowledged, targetMin, pace, consent, apps, since }
 };
 
 export const useSessionStore = create(
@@ -135,6 +169,7 @@ export const useSessionStore = create(
           collectibles: s.collectibles.includes(collectibleId) ? s.collectibles : [...s.collectibles, collectibleId],
         })),
       setSquad: (squad) => set({ squad }),
+      setDetox: (detox) => set({ detox }),
       resetSession: () => set({ ...sessionDefaults }),
     }),
     { name: 'detox-session', storage, version: 1 }
@@ -194,3 +229,14 @@ export const useUiStore = create((set) => ({
 }));
 export const toast = (text, kind) => useUiStore.getState().toast(text, kind);
 export const celebrate = () => useUiStore.getState().celebrate();
+
+/* Plan: start from the measured baseline and cut a fixed step each week until the daily target. */
+export const PLAN_WEEK = 2; // the demo user is in week 2
+export function planTarget(detox, week = PLAN_WEEK) {
+  if (!detox) return 180;
+  return Math.max(detox.targetMin, detox.baselineMin - detox.pace * week);
+}
+export const fmtMin = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`);
+
+/* Pause screen shown when a limited app is opened. */
+export const useInterceptStore = create((set) => ({ app: null, open: (app) => set({ app }), close: () => set({ app: null }) }));

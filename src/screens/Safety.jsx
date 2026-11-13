@@ -9,7 +9,7 @@ const MOODS = [{ value: 'good', label: 'Good' }, { value: 'okay', label: 'Okay' 
 const VIA = ['Push', 'SMS', 'WhatsApp'];
 const HISTORY = ['Okay', 'Struggling', 'Struggling'];
 
-export default function Safety() {
+export default function SafetyTab() {
   const trusted = useFixture('trusted');
   const support = useFixture('support');
   const { pending, alerts, hrLimit, idleMin, setLimit } = useSafetyStore();
@@ -46,12 +46,9 @@ export default function Safety() {
   const persistent = struggling && HISTORY.slice(-2).every((d) => d === 'Struggling');
 
   return (
-    <div className="page">
-      <div className="page-head">
-        <div className="stack tight">
-          <h1>Safety</h1>
-          <p className="muted">Check-ins, wearable alerts and support near you, shared only with the people you choose.</p>
-        </div>
+    <>
+      <div className="row between wrap">
+        <p className="muted small">Check-ins, wearable alerts and support near you, shared only with the people you choose.</p>
         <span className={cx('chip', pending ? 'crit' : 'good')}><ShieldCheck size={13} aria-hidden="true" />{pending ? 'Alert pending' : 'Status: safe'}</span>
       </div>
 
@@ -156,6 +153,6 @@ export default function Safety() {
           </Card>
         </div>
       </div>
-    </div>
+    </>
   );
 }

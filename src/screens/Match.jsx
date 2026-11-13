@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { CalendarPlus, Check, Hand, Lock, MailCheck, MapPin, Plus, RotateCcw, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { CalendarPlus, Check, Hand, HeartHandshake, Lock, MailCheck, MapPin, Plus, RotateCcw, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { CircleTab } from './Companion.jsx';
 import { toast } from '../store.js';
 import { INTERESTS, PERSONALITY_QUIZ } from '../fixtures.js';
 import { Async, Avatar, Btn, Card, InlineError, Meter, Modal, Seg, TimeSelect, cx, useFixture, useKept } from '../ui.jsx';
@@ -44,10 +45,9 @@ function Gate({ onVerified, blocked, onBlocked }) {
   };
 
   return (
-    <div className="page" style={{ maxWidth: 560 }}>
-      <h1>Match</h1>
-      <Card title="Verify your age to use Match">
-        <p className="small muted">Matching and community features are for adults aged 18 and over. We check your email and your date of birth first.</p>
+    <div style={{ maxWidth: 560 }}>
+      <Card title="Verify your age to use matching">
+        <p className="small muted">Discover, Pairing and Groups are for adults aged 18 and over. We check your email and your date of birth first. Your accountability circle does not need this check.</p>
         <div className="steps" aria-hidden="true">{['email', 'code', 'dob'].map((s, i) => <i key={s} className={['email', 'code', 'dob', 'blocked'].indexOf(step) >= i ? 'on' : ''} />)}</div>
 
         {step === 'email' && (
@@ -77,8 +77,8 @@ function Gate({ onVerified, blocked, onBlocked }) {
         )}
         {step === 'blocked' && (
           <div className="stack">
-            <div className="banner crit"><Lock size={17} aria-hidden="true" />Match is closed to anyone under 18.</div>
-            <p className="small">You can still use your companion, the event features and Safety. Match will not open on this account.</p>
+            <div className="banner crit"><Lock size={17} aria-hidden="true" />Matching is closed to anyone under 18.</div>
+            <p className="small">You can still use Health, your accountability circle and Event Mode. Matching will not open on this account.</p>
           </div>
         )}
       </Card>
@@ -87,33 +87,46 @@ function Gate({ onVerified, blocked, onBlocked }) {
 }
 
 /* ---------------- Main ---------------- */
-const TABS = [{ value: 'discover', label: 'Discover', icon: MapPin }, { value: 'pairing', label: 'Pairing', icon: Sparkles }, { value: 'groups', label: 'Groups', icon: Users }];
+const TABS = [
+  { value: 'discover', label: 'Discover', icon: MapPin },
+  { value: 'pairing', label: 'Pairing', icon: Sparkles },
+  { value: 'groups', label: 'Groups', icon: Users },
+  { value: 'circle', label: 'Circle', icon: HeartHandshake },
+];
 const SPOTS = ['Food court, Hall 3', 'Arcade Corner (C1)', 'Main Stage seating'];
 
-export default function Match() {
+/* Community: matching (age gated), groups and the accountability circle. */
+export default function Community({ params }) {
   const [me, setMe] = useKept('match.me', null);
   const [blocked, setBlocked] = useKept('match.blocked', false);
-  const [tab, setTab] = useKept('match.tab', 'discover');
+  const [tab, setTab] = useKept('community.tab', 'discover');
+  useEffect(() => { if (params && params.tab) setTab(params.tab); }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
   const [type, setType] = useKept('match.type', null);
   const [mine, setMine] = useKept('match.mine', ['Manga', 'Retro games']);
   const people = useFixture('people');
-  if (!me) return <Gate key={blocked ? 'blocked' : 'open'} onVerified={setMe} blocked={blocked} onBlocked={() => setBlocked(true)} />;
   const pool = (list) => list.filter((p) => p.gender !== me.gender);
+  const gated = tab !== 'circle' && !me;
   return (
     <div className="page">
       <div className="page-head">
         <div className="stack tight">
-          <h1>Match</h1>
-          <p className="muted">Meet adults who share your interests, nearby or at the event.</p>
+          <h1>Community</h1>
+          <p className="muted">Spend the time you win back with people, not feeds. Meet others who share your interests, join offline meetups, and keep the people who support your detox close.</p>
         </div>
-        <Seg label="Match sections" scroll value={tab} onChange={setTab} options={TABS} />
+        <Seg label="Community sections" scroll value={tab} onChange={setTab} options={TABS} />
       </div>
-      <div className="row wrap">
-        <span className="chip good"><ShieldCheck size={13} aria-hidden="true" />Adult verified, age {me.age}</span>
-        <span className="chip">Pairing: {me.gender === 'lady' ? 'lady with men' : 'man with ladies'}</span>
-        {type && <span className="chip accent">{type}</span>}
-      </div>
-      {tab === 'groups' ? <Groups /> : (
+      <div className="inset small">Matching here is for real-world meetups in public places. Say hello, agree a time, then put the phone away.</div>
+      {gated && <Gate key={blocked ? 'blocked' : 'open'} onVerified={setMe} blocked={blocked} onBlocked={() => setBlocked(true)} />}
+      {!gated && tab !== 'circle' && (
+        <div className="row wrap">
+          <span className="chip good"><ShieldCheck size={13} aria-hidden="true" />Adult verified, age {me.age}</span>
+          <span className="chip">Pairing: {me.gender === 'lady' ? 'lady with men' : 'man with ladies'}</span>
+          {type && <span className="chip accent">{type}</span>}
+        </div>
+      )}
+      {tab === 'circle' && <CircleTab />}
+      {!gated && tab === 'groups' && <Groups />}
+      {!gated && (tab === 'discover' || tab === 'pairing') && (
         <Async state={people} rows={6}>
           {(list) => tab === 'discover'
             ? <Discover people={pool(list)} mine={mine} setMine={setMine} />
@@ -298,6 +311,7 @@ function Groups() {
                   <div className="grow stack tight">
                     <span className="strong">{g.name}</span>
                     <span className="xs muted">{g.members} members. {g.fit}.</span>
+                    {g.next && <span className="small strong">Next meetup: {g.next}</span>}
                     <span className="row wrap">{g.tags.map((t) => <span key={t} className="chip">{t}</span>)}</span>
                   </div>
                   <Btn size="sm" icon={g.joined ? Check : Plus}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Footprints, Moon, Nfc, RotateCcw, ScanLine, Sun, UserCheck, Zap } from 'lucide-react';
+import { Clock, Footprints, Moon, Nfc, RotateCcw, ScanLine, Smartphone, Sun, Timer, UserCheck, Zap } from 'lucide-react';
 import {
-  useCompanionStore, useSessionStore, useKeepStore, useSafetyStore, stageForDays, entryTier, celebrate, toast,
+  useCompanionStore, useSessionStore, useKeepStore, useSafetyStore, useInterceptStore, stageForDays, entryTier, celebrate, toast,
 } from '../store.js';
 import { Btn, Modal, Seg, cx, fixtureData, patchFixture } from '../ui.jsx';
 
@@ -38,7 +38,7 @@ export default function DemoPanel({ onClose, go }) {
     setScan({ ok, text: ok ? `Valid pass. ${user.name} may enter. Window opened at ${opens}.` : `Too early. This pass opens at ${opens}.` });
   };
   const tapRing = () => {
-    if (!ringOn) return setTap({ ok: false, text: 'No ring paired. Pair it in Ring and badge first.' });
+    if (!ringOn) return setTap({ ok: false, text: 'No ring paired. Pair it in Event Mode under Ring and badge first.' });
     return setTap(ringAccess ? { ok: true, text: `Gate accepted the ring. Entry ${tier.window}.` } : { ok: false, text: 'Gate refused the ring. NFC event access is off.' });
   };
   const acceptInvites = async () => {
@@ -61,6 +61,16 @@ export default function DemoPanel({ onClose, go }) {
           <Btn icon={Footprints} onClick={walk}>Sync 2,000 steps</Btn>
           <Btn icon={Sun} onClick={() => endDay(true)}>End day, goals met</Btn>
           <Btn icon={Moon} onClick={() => endDay(false)}>End day, goals missed</Btn>
+        </div>
+      </div>
+
+      <div className="stack demo-section">
+        <h3>Phone use</h3>
+        <p className="small muted">Shows what happens when the user opens a limited app.</p>
+        <div className="row wrap">
+          <Btn icon={Smartphone} onClick={() => { onClose(); useInterceptStore.getState().open('Instagram'); }}>Try to open Instagram</Btn>
+          <Btn icon={Clock} onClick={() => { useCompanionStore.setState((s) => ({ screenMin: s.screenMin + 30, pickups: s.pickups + 6 })); toast('+30 min screen time recorded'); }}>Add 30 min screen time</Btn>
+          <Btn icon={Timer} disabled={!useCompanionStore.getState().focusEndsAt} onClick={() => { useCompanionStore.setState({ focusEndsAt: Date.now() + 3000 }); onClose(); }}>Finish focus session now</Btn>
         </div>
       </div>
 
@@ -89,7 +99,7 @@ export default function DemoPanel({ onClose, go }) {
         <h3>Other people</h3>
         <div className="row wrap">
           <Btn icon={UserCheck} onClick={acceptInvites}>Accept pending circle invites</Btn>
-          <Btn icon={RotateCcw} onClick={() => { const k = useKeepStore.getState(); k.drop('match.me'); k.drop('match.blocked'); toast('Match age check reset'); onClose(); go('match'); }}>Reset Match age check</Btn>
+          <Btn icon={RotateCcw} onClick={() => { const k = useKeepStore.getState(); k.drop('match.me'); k.drop('match.blocked'); toast('Community age check reset'); onClose(); go('community', { tab: 'discover' }); }}>Reset Community age check</Btn>
         </div>
         {circleMsg && <p className="small strong" role="status">{circleMsg}</p>}
       </div>

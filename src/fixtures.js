@@ -97,10 +97,10 @@ const PEOPLE = [
 export const INTERESTS = ['Manga', 'Cosplay', 'Retro games', 'Model kits', 'Trading cards', 'Board games', 'Photography', 'Hiking', 'Running', 'Cycling', 'Cooking'];
 
 const GROUPS = [
-  { id: 'g1', name: 'Saturday Sketch Club', tags: ['Manga', 'Photography'], members: 14, fit: 'Calm, creative types', joined: false },
-  { id: 'g2', name: 'Retro Game Night', tags: ['Retro games', 'Board games'], members: 22, fit: 'Playful, competitive types', joined: false },
-  { id: 'g3', name: 'Trail and Talk', tags: ['Hiking', 'Running'], members: 9, fit: 'Outdoor, reflective types', joined: true },
-  { id: 'g4', name: 'Kit Builders Bench', tags: ['Model kits', 'Trading cards'], members: 11, fit: 'Analytical, detail-first types', joined: false },
+  { id: 'g1', name: 'Saturday Sketch Club', tags: ['Manga', 'Photography'], members: 14, fit: 'Calm, creative types', joined: false, next: 'Sat 10:00, Harbour Park pavilion' },
+  { id: 'g2', name: 'Retro Game Night', tags: ['Retro games', 'Board games'], members: 22, fit: 'Playful, competitive types', joined: false, next: 'Fri 19:00, Pixel Cafe, North Point' },
+  { id: 'g3', name: 'Trail and Talk', tags: ['Hiking', 'Running'], members: 9, fit: 'Outdoor, reflective types', joined: true, next: 'Sun 08:00, Riverside trail head' },
+  { id: 'g4', name: 'Kit Builders Bench', tags: ['Model kits', 'Trading cards'], members: 11, fit: 'Analytical, detail-first types', joined: false, next: 'Wed 18:30, Community hall room 2' },
 ];
 
 export const PERSONALITY_QUIZ = [
@@ -138,6 +138,56 @@ export const GOALS = [
   { id: 'g-steps', label: 'Walk 6,000 steps', reward: 25, hp: 5, check: 'Completes when your ring counts 6,000' },
   { id: 'g-chat', label: 'Talk with your companion', reward: 15, hp: 4, check: 'Completes when you send a message' },
   { id: 'g-block', label: 'Keep blocked apps closed until 18:00', reward: 30, hp: 6, check: 'Checked at 18:00' },
+  { id: 'g-focus', label: 'Finish one focus session', reward: 25, hp: 5, check: 'Completes when a focus session ends' },
+];
+
+/* ---------- Digital detox ---------- */
+export const OBJECTIVES = [
+  { id: 'focus', title: 'Regain focus', text: 'Fewer interruptions, so you can stay on one task longer.' },
+  { id: 'screen', title: 'Cut screen time', text: 'Become aware of your screen time and reduce it step by step.' },
+  { id: 'aware', title: 'Know your habits', text: 'See what pulls you to your phone and when.' },
+  { id: 'connect', title: 'Connect in real life', text: 'Spend the time you win back with people and offline activities.' },
+];
+
+export const HABIT_QUESTIONS = {
+  estimate: { q: 'How long do you think you spend on your phone each day?', options: ['Under 2 hours', '2 to 3 hours', '3 to 4 hours', 'Over 4 hours'] },
+  problems: {
+    q: 'Which of these are true for you?',
+    options: [
+      'I find it hard to focus on one task',
+      'I scroll late at night and sleep less',
+      'I check my phone first thing in the morning',
+      'I lose track of time on social media',
+      'I feel worse after scrolling',
+      'I spend less time with people than I want to',
+    ],
+  },
+};
+
+/* Measured baseline from the phone and ring over the last 7 days (mock). */
+export const BASELINE = { avgMin: 252, pickups: 96, firstPickup: '07:02', topApps: [['Instagram', 74], ['TikTok', 61], ['YouTube', 48]] };
+export const DAILY_TARGETS = [{ value: 180, label: '3 hours' }, { value: 120, label: '2 hours' }, { value: 90, label: '90 minutes' }];
+export const PACES = [{ value: 15, label: 'Gentle', hint: '15 minutes less each week' }, { value: 30, label: 'Steady', hint: '30 minutes less each week' }];
+
+export const SCREEN_WEEK = [
+  { day: 'Sat', min: 262 }, { day: 'Sun', min: 248 }, { day: 'Mon', min: 240 }, { day: 'Tue', min: 231 },
+  { day: 'Wed', min: 220 }, { day: 'Thu', min: 205 },
+];
+
+export const ACTIVITIES = [
+  { id: 'a-walk', title: 'Take a 15 minute walk outside', kind: 'Move', min: 15, reward: 15 },
+  { id: 'a-read', title: 'Read 10 pages of a book', kind: 'Focus', min: 15, reward: 15 },
+  { id: 'a-call', title: 'Call a friend instead of texting', kind: 'Connect', min: 10, reward: 20 },
+  { id: 'a-sketch', title: 'Sketch something in front of you', kind: 'Create', min: 15, reward: 15 },
+  { id: 'a-journal', title: 'Write three lines about your day', kind: 'Reflect', min: 5, reward: 10 },
+  { id: 'a-meetup', title: 'Join a group meetup this week', kind: 'Connect', min: 60, reward: 30, link: ['community', { tab: 'groups' }] },
+];
+
+export const INSIGHTS = [
+  { id: 'i1', title: 'Your peak scrolling time is 21:00 to 23:00', detail: 'That is 41 percent of your screen time. Your block schedule now starts at 21:00.' },
+  { id: 'i2', title: 'You pick up your phone within 2 minutes of waking', detail: 'First pickup at 07:02 on 6 of 7 days. Try charging it outside the bedroom.' },
+  { id: 'i3', title: 'Heavy scrolling nights come before short sleep', detail: 'On 3 of 4 nights with over 1 hour of late scrolling, you slept under 6.5 hours.' },
+  { id: 'i4', title: 'Focus sessions are getting longer', detail: 'You stayed off your phone for 25 minutes 4 times this week, up from once.' },
 ];
 
 const HEALTH = {

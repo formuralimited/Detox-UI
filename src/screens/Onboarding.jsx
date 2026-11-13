@@ -7,7 +7,7 @@ import { Btn, Card, Seg, Sprite } from '../ui.jsx';
 
 const DEMO_ACCOUNT = { name: 'Alex Chen', email: 'alex.chen@example.com' };
 
-export default function Onboarding() {
+export default function Onboarding({ mode = 'event' }) {
   const theme = useCompanionStore((s) => s.theme);
   const setTheme = useCompanionStore((s) => s.setTheme);
   const { user, signIn, completeSurvey } = useSessionStore();
@@ -26,7 +26,7 @@ export default function Onboarding() {
   const issue = () => {
     completeSurvey(answers);
     celebrate();
-    toast('Ticket issued. Your pass is in the Event tab.', 'good');
+    toast('Ticket issued. Open Pass to see it.', 'good');
   };
 
   return (
@@ -42,8 +42,8 @@ export default function Onboarding() {
             <div className="row top">
               <Sprite stage={1} size="sm" />
               <div className="stack tight grow">
-                <h1>Welcome to Detox</h1>
-                <p className="muted">You scanned the event poster. Sign in to get your digital ticket and meet your companion.</p>
+                <h1>{mode === 'event' ? 'Welcome to Event Mode' : 'Welcome to Detox'}</h1>
+                <p className="muted">{mode === 'event' ? 'You scanned the event poster. Sign in to get your digital ticket and meet your companion.' : 'Sign in to meet your companion and start your detox.'}</p>
               </div>
             </div>
             <div className="stack tight">
@@ -53,8 +53,12 @@ export default function Onboarding() {
                 </Btn>
               ))}
             </div>
-            <p className="xs muted">Demo sign-in. No real account is used. Your verified profile maps to your event profile.</p>
+            <p className="xs muted">Demo sign-in. No real account is used.{mode === 'event' ? ' Your verified profile maps to your event profile.' : ''}</p>
           </Card>
+        )}
+
+        {mode === 'event' && (
+          <div><Btn size="sm" variant="ghost" onClick={() => { try { window.location.hash = 'home'; } catch { /* ignore */ } }}>Go to the Detox app instead</Btn></div>
         )}
 
         {user && step < SURVEY.length && (

@@ -1,39 +1,32 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  Check, Clock, Footprints, Gamepad2, Grid3x3, Lock, Map as MapIcon, MapPin, Maximize2, Play, Sparkles, Ticket, Bluetooth, Flame,
+  Check, Clock, Footprints, Lock, Map as MapIcon, MapPin, Maximize2, Play, Sparkles, Bluetooth, Flame,
 } from 'lucide-react';
 import { useCompanionStore, useSessionStore, entryTier, ENTRY_TIERS, celebrate, toast } from '../store.js';
 import { COLLECTIBLES, GAMES, MAP } from '../fixtures.js';
-import { Async, Btn, Card, InlineError, Modal, PixelArt, Seg, cx, useFixture, useInterval, useKept } from '../ui.jsx';
+import { Async, Btn, Card, InlineError, Modal, PixelArt, cx, useFixture, useInterval, useKept } from '../ui.jsx';
 import GameModal from './Games.jsx';
 
-const TABS = [
-  { value: 'ticket', label: 'Ticket', icon: Ticket },
-  { value: 'games', label: 'Games', icon: Gamepad2 },
-  { value: 'map', label: 'Map', icon: MapIcon },
-  { value: 'collectibles', label: 'Collectibles', icon: Grid3x3 },
-];
-
-export default function EventScreen({ go, params }) {
-  const [kept, setKept] = useKept('event.tab', 'ticket');
-  const [tab, setTabState] = useState(params.tab || kept);
-  const setTab = (t) => { setTabState(t); setKept(t); };
+function EventPage({ title, intro, children }) {
   return (
     <div className="page">
-      <div className="page-head">
-        <div className="stack tight">
-          <h1>Event</h1>
-          <p className="muted">Your pass, mini-games, the hall map and what you have collected.</p>
-        </div>
-        <Seg label="Event sections" scroll value={tab} onChange={setTab} options={TABS} />
-      </div>
-      {tab === 'ticket' && <TicketTab onPlay={() => setTab('games')} />}
-      {tab === 'games' && <GamesTab autoPlay={params.play} />}
-      {tab === 'map' && <MapTab focus={params.booth} />}
-      {tab === 'collectibles' && <CollectiblesTab go={go} onMap={() => setTab('map')} />}
+      <div className="page-head"><div className="stack tight"><h1>{title}</h1><p className="muted">{intro}</p></div></div>
+      {children}
     </div>
   );
+}
+export function PassPage({ go }) {
+  return <EventPage title="Your pass" intro="Your digital ticket and how to unlock an earlier entry window."><TicketTab onPlay={() => go('games')} /></EventPage>;
+}
+export function GamesPage({ params }) {
+  return <EventPage title="Mini-games" intro="Short games of 30 seconds to 2 minutes. Each one pays Star Dust once."><GamesTab autoPlay={params.play} /></EventPage>;
+}
+export function MapPage({ params }) {
+  return <EventPage title="Hall map" intro="Live queue times. Check in at booths to unlock collectibles."><MapTab focus={params.booth} /></EventPage>;
+}
+export function RewardsPage({ go }) {
+  return <EventPage title="Collectibles" intro="Pixel art you unlock by checking in at booths."><CollectiblesTab go={go} onMap={() => go('map')} /></EventPage>;
 }
 
 /* ---------------- Ticket ---------------- */

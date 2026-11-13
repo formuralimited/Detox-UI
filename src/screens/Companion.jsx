@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Activity, Ban, Check, Clock, Footprints, HeartPulse, MessageCircle, Minus, Moon, PawPrint, Plus, Send, Sparkles, Timer, Trash2, UserPlus, Users,
+  Activity, Ban, Check, Clock, ShieldCheck, Footprints, HeartPulse, MessageCircle, Minus, Moon, PawPrint, Plus, Send, Sparkles, Timer, Trash2, UserPlus, Users,
 } from 'lucide-react';
-import { useCompanionStore, STAGES, stageForDays, hpState, toast } from '../store.js';
+import { useCompanionStore, useSessionStore, STAGES, stageForDays, hpState, toast, fmtMin } from '../store.js';
 import { FOODS, GOALS, TONES } from '../fixtures.js';
 import { Async, Avatar, BarChart, Btn, Card, Chat, InlineError, Meter, Seg, Sprite, Switch, TimeSelect, cx, useCountdown, useFixture, useInterval, useKept } from '../ui.jsx';
 import { GoalsCard, HpBlock } from './Home.jsx';
+import SafetyTab from './Safety.jsx';
+import { FocusCard, InsightsCard, OverridesCard, PlanCard, ReflectionCard, ScreenTimeCard, TalkCard } from './Detox.jsx';
 
 const TABS = [
-  { value: 'pet', label: 'Pet', icon: PawPrint },
+  { value: 'pet', label: 'Companion', icon: PawPrint },
   { value: 'chat', label: 'Chat', icon: MessageCircle },
-  { value: 'blocking', label: 'Blocking', icon: Ban },
-  { value: 'health', label: 'Health', icon: HeartPulse },
-  { value: 'circle', label: 'Circle', icon: Users },
+  { value: 'blocking', label: 'Focus', icon: Ban },
+  { value: 'health', label: 'Coach', icon: HeartPulse },
+  { value: 'safety', label: 'Safety', icon: ShieldCheck },
 ];
 
 export function LedgerList({ limit = 6 }) {
@@ -30,24 +32,26 @@ export function LedgerList({ limit = 6 }) {
   );
 }
 
-export default function Companion({ go, params }) {
-  const [kept, setKept] = useKept('companion.tab', 'pet');
+/* Health: companion, chat, app blocking, health coach and safety. Community features live in Community. */
+export default function Health({ go, params }) {
+  const [kept, setKept] = useKept('health.tab', 'pet');
   const [tab, setTabState] = useState(params.tab || kept);
   const setTab = (t) => { setTabState(t); setKept(t); };
+  useEffect(() => { if (params.tab) setTab(params.tab); }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="page">
       <div className="page-head">
         <div className="stack tight">
-          <h1>Companion</h1>
-          <p className="muted">Your pet lives on your detox habits, your activity and how often you look after it.</p>
+          <h1>Health</h1>
+          <p className="muted">Your companion, detox goals, app limits, health coach and safety.</p>
         </div>
-        <Seg label="Companion sections" scroll value={tab} onChange={setTab} options={TABS} />
+        <Seg label="Health sections" scroll value={tab} onChange={setTab} options={TABS} />
       </div>
       {tab === 'pet' && <PetTab go={go} />}
       {tab === 'chat' && <ChatTab go={go} />}
       {tab === 'blocking' && <BlockingTab />}
-      {tab === 'health' && <HealthTab />}
-      {tab === 'circle' && <CircleTab />}
+      {tab === 'health' && <HealthTab go={go} />}
+      {tab === 'safety' && <SafetyTab />}
     </div>
   );
 }
@@ -132,7 +136,7 @@ const REPLIES = {
     playful: 'Thank you for saying it out loud. Let us get you some real company. Your circle is one tap away, and the Safety tab has people who can help.',
   },
   other: {
-    analytical: 'Noted. Today you have used 61 minutes of social apps against a 120 minute limit. You are on track.',
+    analytical: 'Noted. You have used 93 of your 120 social media minutes today. A 25 minute focus session now would keep you on track.',
     warm: 'I hear you. You are doing well today, and I am growing because of it.',
     playful: 'Ribbit. Tell me more. Also, you are winning today.',
   },
@@ -177,8 +181,8 @@ function ChatTab({ go }) {
           <div className="inset"><span className="strong">{TONES[tone].label} tone.</span> <span className="small muted">{TONES[tone].hint}.</span></div>
         </Card>
         <Card title="When things feel heavy">
-          <p className="small muted">Your companion is not a counselor. The Safety tab lists licensed support and partner churches near you.</p>
-          <div><Btn onClick={() => go('safety')}>Open Safety</Btn></div>
+          <p className="small muted">Your companion is not a counselor. The Safety tab in Health lists licensed support and partner churches near you.</p>
+          <div><Btn onClick={() => go('health', { tab: 'safety' })}>Open Safety</Btn></div>
         </Card>
       </div>
     </div>
@@ -193,8 +197,7 @@ function BlockingTab() {
   const [urls, setUrls] = useKept('block.urls', ['news-scroll.example', 'shop-deals.example']);
   const [url, setUrl] = useState('');
   const [urlErr, setUrlErr] = useState('');
-  const [focus, setFocus] = useState(false);
-  const [left, setLeft] = useCountdown(25 * 60, focus, () => { setFocus(false); toast('Focus session finished.', 'good'); });
+  const detox = useSessionStore((s) => s.detox);
   const patch = (id, fn) => state.setData((apps) => apps.map((a) => (a.id === id ? fn(a) : a)));
   const addUrl = (e) => {
     e.preventDefault();
@@ -205,6 +208,13 @@ function BlockingTab() {
     return toast(`${d} blocked`, 'good');
   };
   return (
+    <div className="stack">
+      <div className="grid two">
+        <FocusCard />
+        <ScreenTimeCard />
+      </div>
+      <PlanCard />
+      {detox && <div className="inset small">You allowed Detox to limit {detox.apps.length} apps on {detox.since}. Limits stay on until you turn them off here.</div>}
     <div className="grid two">
       <Card title="Apps and daily limits">
         <Async state={state} rows={5}>
@@ -267,21 +277,9 @@ function BlockingTab() {
           </div>
         </Card>
 
-        <Card title="Focus session">
-          {focus ? (
-            <>
-              <div className="row between"><span className="timer num">{String(Math.floor(left / 60)).padStart(2, '0')}:{String(left % 60).padStart(2, '0')}</span><span className="chip crit">All limited apps blocked</span></div>
-              <Meter value={25 * 60 - left} max={25 * 60} tone="accent" label="Focus progress" />
-              <div><Btn onClick={() => setFocus(false)}>End session</Btn></div>
-            </>
-          ) : (
-            <>
-              <p className="small muted">Blocks every limited app and site for 25 minutes, starting now.</p>
-              <div><Btn variant="primary" icon={Timer} onClick={() => { setLeft(25 * 60); setFocus(true); toast('Focus session started.'); }}>Start 25 minute block</Btn></div>
-            </>
-          )}
-        </Card>
+        <OverridesCard />
       </div>
+    </div>
     </div>
   );
 }
@@ -295,7 +293,7 @@ const ADVICE = {
 /* Green at 90 percent of goal or more, amber from 60 percent, red below. */
 const progressTone = (r) => (r >= 0.9 ? '' : r >= 0.6 ? 'warn' : 'crit');
 
-function HealthTab() {
+function HealthTab({ go }) {
   const state = useFixture('health');
   const steps = useCompanionStore((s) => s.steps);
   const [source, setSource] = useKept('health.source', 'ring');
@@ -305,6 +303,13 @@ function HealthTab() {
   const changeSource = (v) => { setSource(v); state.reload(); toast(`Syncing from ${SOURCES.find((s) => s.value === v).label}`); };
   return (
     <div className="stack">
+      <div className="grid two">
+        <InsightsCard />
+        <div className="stack">
+          <ReflectionCard />
+          <TalkCard go={go} />
+        </div>
+      </div>
       <div className="row between wrap">
         <span className="small strong">Data source</span>
         <Seg label="Health data source" scroll value={source} onChange={changeSource} options={SOURCES} />
@@ -359,9 +364,9 @@ function HealthTab() {
 
 /* ---------------- Accountability circle ---------------- */
 const RELATIONS = ['Spouse', 'Church leader', 'Close friend', 'Family member'];
-function CircleTab() {
+export function CircleTab() {
   const state = useFixture('circle');
-  const { hp, detoxDays, goalsDone } = useCompanionStore();
+  const { detoxDays, goalsDone, screenMin, overrides } = useCompanionStore();
   const [form, setForm] = useState({ name: '', relation: RELATIONS[0] });
   const [err, setErr] = useState('');
   const [feed, setFeed] = useKept('circle.feed', [{ id: 1, text: 'Daniel Park sent a cheer: "Proud of you. Day 5!"', at: '08:12' }]);
@@ -414,7 +419,7 @@ function CircleTab() {
           </form>
         </Card>
         <Card title="Status updates">
-          <div className="inset small">Day {detoxDays}, {hp} HP, {goalsDone.length} of {GOALS.length} goals done.</div>
+          <div className="inset small">What your circle sees: day {detoxDays}, {fmtMin(screenMin)} screen time today, {goalsDone.length} of {GOALS.length} goals done, limited apps opened anyway {overrides.length} {overrides.length === 1 ? 'time' : 'times'}.</div>
           <div><Btn icon={Send} onClick={() => { setFeed((f) => [{ id: Date.now(), text: `You shared today's status with your circle.`, at: now() }, ...f]); toast('Status shared with your circle', 'good'); }}>Share today's status</Btn></div>
           <div className="list">
             {feed.map((f) => <div key={f.id} className="row between small"><span className="grow wrap-any">{f.text}</span><span className="muted num">{f.at}</span></div>)}

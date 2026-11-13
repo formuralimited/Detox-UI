@@ -482,7 +482,7 @@ export function BarChart({ data, xKey, yKey, unit = '', height = 190, markIndex,
           {goal != null && (
             <g pointerEvents="none">
               <line x1={pad.l} x2={w - pad.r} y1={y(goal)} y2={y(goal)} stroke="var(--ink)" strokeWidth="1.5" strokeDasharray="5 4" />
-              <text className="val" x={w - pad.r} y={y(goal) - 5} textAnchor="end">{goalLabel || `Goal ${goal.toLocaleString()}`}</text>
+              {goalLabel !== '' && <text className="val" x={w - pad.r} y={y(goal) - 5} textAnchor="end">{goalLabel || `Goal ${goal.toLocaleString()}`}</text>}
             </g>
           )}
         </svg>
