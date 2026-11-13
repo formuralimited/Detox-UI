@@ -136,7 +136,7 @@ export const FOODS = [
 export const GOALS = [
   { id: 'g-social', label: 'Stay under 2 hours of social media', reward: 30, hp: 6, check: 'Checked at the end of the day' },
   { id: 'g-steps', label: 'Walk 6,000 steps', reward: 25, hp: 5, check: 'Completes when your ring counts 6,000' },
-  { id: 'g-chat', label: 'Talk with your companion', reward: 15, hp: 4, check: 'Completes when you send a message' },
+  { id: 'g-chat', label: 'Talk with your Detox assistant', reward: 15, hp: 4, check: 'Completes when the assistant replies' },
   { id: 'g-block', label: 'Keep blocked apps closed until 18:00', reward: 30, hp: 6, check: 'Checked at 18:00' },
   { id: 'g-focus', label: 'Finish one focus session', reward: 25, hp: 5, check: 'Completes when a focus session ends' },
 ];

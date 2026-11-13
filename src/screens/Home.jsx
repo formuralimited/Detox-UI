@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Check, Flame, Timer, Gamepad2, Map as MapIcon, MessageCircle, Nfc, ShoppingBag, Sparkles, Ticket, SkipForward } from 'lucide-react';
 import { useCompanionStore, useSessionStore, stageForDays, nextStage, hpState, entryTier } from '../store.js';
 import { GOALS } from '../fixtures.js';
 import { Btn, Card, Meter, Sprite, cx, useInterval } from '../ui.jsx';
 import { ActivitiesCard, FocusCard, ScreenTimeCard, WhyCard } from './Detox.jsx';
+import { useAssistant } from './Assistant.jsx';
 
 export function HpBlock() {
   const { hp, detoxDays } = useCompanionStore();
@@ -36,7 +37,7 @@ function goalProgress(g, s) {
   if (g.id === 'g-steps') return { done, value: s.steps, max: 6000, text: `${s.steps.toLocaleString()} of 6,000 steps`, status: 'In progress', tone: '', meterTone: 'blue' };
   if (g.id === 'g-block') return { done, text: s.blockedOpens ? `Blocked apps opened ${s.blockedOpens} times` : 'No blocked app opened so far', status: s.blockedOpens ? 'Missed' : 'On track', tone: s.blockedOpens ? 'crit' : 'good' };
   if (g.id === 'g-focus') return { done, text: done ? `${s.focusMin} min focused today` : 'No focus session finished yet', status: s.focusEndsAt ? 'In progress' : 'Not yet', tone: '' };
-  return { done, text: done ? 'You talked with your companion today' : 'Not yet today', status: 'Not yet', tone: '' };
+  return { done, text: done ? 'You talked with your Detox assistant today' : 'Not yet today', status: 'Not yet', tone: '' };
 }
 
 export function GoalsCard({ go }) {
@@ -58,7 +59,7 @@ export function GoalsCard({ go }) {
                   : <span className={cx('chip', p.tone)}>{p.status}</span>}
               </div>
               {p.max && !p.done && <Meter value={p.value} max={p.max} tone={p.meterTone} label={g.label} />}
-              {g.id === 'g-chat' && !p.done && go && <div><Btn size="sm" icon={MessageCircle} onClick={() => go('health', { tab: 'chat' })}>Talk now</Btn></div>}
+              {g.id === 'g-chat' && !p.done && go && <div><Btn size="sm" icon={MessageCircle} onClick={() => useAssistant.getState().setOpen(true)}>Talk now</Btn></div>}
               {g.id === 'g-focus' && !p.done && !s.focusEndsAt && go && <div><Btn size="sm" icon={Timer} onClick={() => go('health', { tab: 'blocking' })}>Start a session</Btn></div>}
             </div>
           );
@@ -69,7 +70,7 @@ export function GoalsCard({ go }) {
 }
 
 /* Detox app home: purpose first, then screen time, focus, offline activities, the companion and goals. */
-export default function DetoxHome({ go }) {
+export default function DetoxHome({ go, params }) {
   const { hp, detoxDays, goalsDone } = useCompanionStore();
   const { user } = useSessionStore();
   const stage = stageForDays(detoxDays);
@@ -78,14 +79,20 @@ export default function DetoxHome({ go }) {
     const list = [];
     if (!goalsDone.includes('g-focus')) list.push({ text: 'Start a focus session. I will keep your distracting apps closed until it ends.', cta: 'Start focus', to: ['health', { tab: 'blocking' }] });
     if (hp < 40) list.push({ text: 'I am running low on health. Feed me before I faint.', cta: 'Open food shop', to: ['health', { tab: 'pet' }] });
-    list.push({ text: 'Feeling the urge to scroll? Try something offline instead. It feeds me too.', cta: 'See activities', to: ['home', {}] });
-    if (!goalsDone.includes('g-chat')) list.push({ text: 'Tell me what pulled you to your phone today. Noticing it is half the work.', cta: 'Talk now', to: ['health', { tab: 'chat' }] });
+    list.push({ text: 'Feeling the urge to scroll? Try something offline instead. It feeds me too.', cta: 'See activities', to: ['home', { focus: 'activities' }] });
+    if (!goalsDone.includes('g-chat')) list.push({ text: 'Tell the Detox assistant what pulled you to your phone today. Noticing it is half the work.', cta: 'Talk now', to: ['home', { focus: 'assistant' }] });
     list.push({ text: 'Your weekly reflection is waiting. It helps you see your habits clearly.', cta: 'Reflect', to: ['health', { tab: 'health' }] });
     return list;
   }, [hp, goalsDone]);
   const [i, setI] = useState(0);
   useInterval(() => setI((x) => x + 1), 8000);
   const prompt = prompts[i % prompts.length];
+  const scrollTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  useEffect(() => {
+    if (!params || !params.focus) return;
+    if (params.focus === 'assistant') useAssistant.getState().setOpen(true);
+    else setTimeout(() => scrollTo(params.focus), 50);
+  }, [params]);
   return (
     <div className="page">
       <div className="page-head">
@@ -109,7 +116,7 @@ export default function DetoxHome({ go }) {
             <div className="stack">
               <div className="bubble" aria-live="polite">{prompt.text}</div>
               <div className="row wrap">
-                <Btn variant="ghost" size="sm" icon={ArrowRight} onClick={() => { if (prompt.to[0] === 'home') { const el = document.getElementById('activities'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else go(...prompt.to); }}>{prompt.cta}</Btn>
+                <Btn variant="ghost" size="sm" icon={ArrowRight} onClick={() => { if (prompt.to[0] === 'home') { if (prompt.to[1].focus === 'assistant') useAssistant.getState().setOpen(true); else scrollTo(prompt.to[1].focus); } else go(...prompt.to); }}>{prompt.cta}</Btn>
                 <Btn size="sm" variant="ghost" icon={SkipForward} onClick={() => setI((x) => x + 1)}>Next tip</Btn>
               </div>
             </div>

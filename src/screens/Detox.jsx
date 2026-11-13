@@ -8,6 +8,7 @@ import {
 import { ACTIVITIES, APPS, INSIGHTS, OBJECTIVES, SCREEN_WEEK } from '../fixtures.js';
 import { BarChart, Btn, Card, InlineError, Meter, Modal, Seg, cx, useCountdown, useInterval, useKept } from '../ui.jsx';
 import { OBJECTIVE_ICONS, planWeeks } from './DetoxSetup.jsx';
+import { useAssistant } from './Assistant.jsx';
 
 /* ---------- Focus sessions ---------- */
 export function useFocusLeft() {
@@ -276,7 +277,7 @@ export function TalkCard({ go }) {
       <div className="list">
         <div className="row between"><div className="grow"><div className="strong">Your accountability circle</div><div className="xs muted">People you trust who see your progress</div></div><Btn size="sm" icon={Users} onClick={() => go('community', { tab: 'circle' })}>Open circle</Btn></div>
         <div className="row between"><div className="grow"><div className="strong">Licensed counselors and partner churches</div><div className="xs muted">Support near you</div></div><Btn size="sm" icon={HeartHandshake} onClick={() => go('health', { tab: 'safety' })}>Find support</Btn></div>
-        <div className="row between"><div className="grow"><div className="strong">Your companion</div><div className="xs muted">Talk about an urge as it happens</div></div><Btn size="sm" icon={MessageCircle} onClick={() => go('health', { tab: 'chat' })}>Chat now</Btn></div>
+        <div className="row between"><div className="grow"><div className="strong">Detox assistant</div><div className="xs muted">Talk about an urge as it happens</div></div><Btn size="sm" icon={MessageCircle} onClick={() => useAssistant.getState().setOpen(true)}>Chat now</Btn></div>
       </div>
     </Card>
   );

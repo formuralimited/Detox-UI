@@ -11,7 +11,6 @@ import { FocusCard, InsightsCard, OverridesCard, PlanCard, ReflectionCard, Scree
 
 const TABS = [
   { value: 'pet', label: 'Companion', icon: PawPrint },
-  { value: 'chat', label: 'Chat', icon: MessageCircle },
   { value: 'blocking', label: 'Focus', icon: Ban },
   { value: 'health', label: 'Coach', icon: HeartPulse },
   { value: 'safety', label: 'Safety', icon: ShieldCheck },
@@ -48,7 +47,6 @@ export default function Health({ go, params }) {
         <Seg label="Health sections" scroll value={tab} onChange={setTab} options={TABS} />
       </div>
       {tab === 'pet' && <PetTab go={go} />}
-      {tab === 'chat' && <ChatTab go={go} />}
       {tab === 'blocking' && <BlockingTab />}
       {tab === 'health' && <HealthTab go={go} />}
       {tab === 'safety' && <SafetyTab />}
@@ -108,82 +106,6 @@ function PetTab({ go }) {
       <div className="stack">
         <GoalsCard go={go} />
         <Card title="Star Dust ledger"><LedgerList /></Card>
-      </div>
-    </div>
-  );
-}
-
-/* ---------------- Conversational agent with mirroring ---------------- */
-const REPLIES = {
-  urge: {
-    analytical: 'Urges peak for about 10 minutes. Option 1: start a 25 minute block now. Option 2: walk 500 steps. Which one?',
-    warm: 'That pull is real, and you noticed it. Stay with me for ten minutes and it will ease. Want me to start a short block?',
-    playful: 'The scroll monster is knocking. Let us not answer. Ten minutes, you and me, then a snack for me?',
-  },
-  sleep: {
-    analytical: 'You slept 6 h 24 min against a 7 h 30 min goal. Biggest lever: phone out of the bedroom by 22:30.',
-    warm: 'A short night makes everything harder. Be kind to yourself today. Tonight, let us put the phone to bed early.',
-    playful: 'Six hours? I nap more than that in a pond. Tonight the phone sleeps in the hallway.',
-  },
-  move: {
-    analytical: 'You are at 4,380 of 6,000 steps. A 15 minute walk covers the gap and earns 25 Star Dust.',
-    warm: 'A little walk would do you good, and me too. Fifteen minutes is enough to reach your goal.',
-    playful: 'Hop time. 1,620 steps to go. I will count, you walk.',
-  },
-  low: {
-    analytical: 'Thank you for telling me. Two steps that help: message one person in your circle, and look at Support near you in the Safety tab.',
-    warm: 'I am glad you told me. You do not have to carry this alone. Your circle is here, and the Safety tab lists people near you who can help.',
-    playful: 'Thank you for saying it out loud. Let us get you some real company. Your circle is one tap away, and the Safety tab has people who can help.',
-  },
-  other: {
-    analytical: 'Noted. You have used 93 of your 120 social media minutes today. A 25 minute focus session now would keep you on track.',
-    warm: 'I hear you. You are doing well today, and I am growing because of it.',
-    playful: 'Ribbit. Tell me more. Also, you are winning today.',
-  },
-};
-const topicOf = (t) =>
-  /scroll|urge|instagram|tiktok|phone|feed|crav/i.test(t) ? 'urge' :
-  /sleep|tired|slept|awake|night/i.test(t) ? 'sleep' :
-  /walk|step|exercise|run|gym|move/i.test(t) ? 'move' :
-  /sad|low|lonely|down|stress|anxious|hard|alone/i.test(t) ? 'low' : 'other';
-const PROFILES = [
-  { value: 'analytical', label: 'INTJ' },
-  { value: 'warm', label: 'ENFJ' },
-  { value: 'playful', label: 'ENTP' },
-];
-const STARTERS = ['I want to scroll', 'I slept badly', 'I feel low today'];
-
-function ChatTab({ go }) {
-  const { completeGoal, goalsDone } = useCompanionStore();
-  const [tone, setTone] = useKept('chat.tone', 'analytical');
-  const [typing, setTyping] = useState(false);
-  const [messages, setMessages] = useKept('chat.messages', [{ id: 1, from: 'bot', text: 'Hi. How is your detox going today?' }]);
-  const send = (text) => {
-    setMessages((m) => [...m, { id: Date.now(), from: 'me', text }]);
-    setTyping(true);
-    const topic = topicOf(text);
-    setTimeout(() => {
-      setTyping(false);
-      setMessages((m) => [...m, { id: Date.now() + 1, from: 'bot', text: REPLIES[topic][tone], meta: `${TONES[tone].label} tone` }]);
-      if (!goalsDone.includes('g-chat')) { completeGoal(GOALS.find((g) => g.id === 'g-chat')); toast('Goal done: talk with your companion. +15 Star Dust', 'good'); }
-    }, 800);
-  };
-  return (
-    <div className="grid two">
-      <Card title="Talk with your companion">
-        <Chat inputId="companion-chat" messages={messages} typing={typing} onSend={send} placeholder="Message your companion" emptyText="Say hello to start." />
-        <div className="row wrap">{STARTERS.map((s) => <button key={s} type="button" className="chip" onClick={() => send(s)}>{s}</button>)}</div>
-      </Card>
-      <div className="stack">
-        <Card title="Personality mirroring">
-          <p className="small muted">Your companion studies how you talk and mirrors your traits over time. Pick a profile to preview the tone it would use.</p>
-          <Seg label="Personality profile" value={tone} onChange={setTone} options={PROFILES} />
-          <div className="inset"><span className="strong">{TONES[tone].label} tone.</span> <span className="small muted">{TONES[tone].hint}.</span></div>
-        </Card>
-        <Card title="When things feel heavy">
-          <p className="small muted">Your companion is not a counselor. The Safety tab in Health lists licensed support and partner churches near you.</p>
-          <div><Btn onClick={() => go('health', { tab: 'safety' })}>Open Safety</Btn></div>
-        </Card>
       </div>
     </div>
   );

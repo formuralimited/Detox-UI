@@ -49,3 +49,13 @@ The Detox app asks for sign-in, then a detox setup: purpose, habit check, measur
 - `src/screens/Demo.jsx`: demo controls (time passing, sensors, gate). Turn off with `DEMO_MODE = false` in `src/store.js`
 
 The Exhibitor Portal is not part of this project. It is built separately.
+
+## Detox assistant (AI chatbot on Home)
+
+`src/assistant.js` picks how the assistant answers:
+
+1. **Published artifact:** asks Claude through the page's `sample` capability. Real AI replies.
+2. **Your build:** set `VITE_ASSISTANT_URL` in `.env` to your backend endpoint. It receives `{ system, messages }` and must return `{ text }`. Call OpenAI (or any model) from that server so the API key never reaches the browser.
+3. **Neither:** short offline replies, labeled "Offline demo replies".
+
+The system prompt includes the user's screen time, target, pickups, focus minutes, goals and the habits they named in setup. The assistant can start a focus session through the `start_focus_session` tool.

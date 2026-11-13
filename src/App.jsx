@@ -9,6 +9,7 @@ import DemoPanel from './screens/Demo.jsx';
 import Onboarding from './screens/Onboarding.jsx';
 import DetoxSetup from './screens/DetoxSetup.jsx';
 import { FocusBar, InterceptModal } from './screens/Detox.jsx';
+import { AssistantFab, AssistantPanel, useAssistant } from './screens/Assistant.jsx';
 import DetoxHome, { EventHome } from './screens/Home.jsx';
 import { PassPage, GamesPage, MapPage, RewardsPage } from './screens/Event.jsx';
 import Health, { LedgerList } from './screens/Companion.jsx';
@@ -218,7 +219,7 @@ export default function App() {
             <span className="small strong">{user ? `Signed in as ${user.name} with ${user.provider}` : 'Not signed in'}</span>
             <div className="row wrap">
               <Btn icon={RotateCcw} onClick={() => { resetCompanion(); toast('Companion progress reset'); setMenu(false); }}>Reset companion progress</Btn>
-              <Btn icon={LogOut} variant="danger" onClick={() => { resetSession(); resetCompanion(); useKeepStore.getState().clear(); useSafetyStore.getState().reset(); setMenu(false); }}>Sign out and restart</Btn>
+              <Btn icon={LogOut} variant="danger" onClick={() => { resetSession(); resetCompanion(); useKeepStore.getState().clear(); useSafetyStore.getState().reset(); useAssistant.getState().clearAll(); setMenu(false); }}>Sign out and restart</Btn>
             </div>
           </div>
           {DEMO_MODE && (
@@ -237,6 +238,7 @@ export default function App() {
       )}
       {demo && <DemoPanel onClose={() => setDemo(false)} go={go} />}
       {ready && <InterceptModal go={go} />}
+      {ready && !needsSetup && workspace === 'detox' && <><AssistantFab /><AssistantPanel /></>}
       <Toasts />
       <Confetti />
       <div className="scanlines" aria-hidden="true" />
