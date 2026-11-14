@@ -61,7 +61,8 @@ export default function DetoxSetup() {
         {step === 0 && (
           <Card>
             <h1>Take back your time and attention</h1>
-            <p className="muted">Hi {user.name.split(' ')[0]}. Detox helps you build healthier digital habits. It limits the apps that distract you, shows you your real screen time, and gives you better things to do with the time you win back.</p>
+            <p className="muted">Hi {user.name.split(' ')[0]}. If your phone is taking more of your day than you want, you are not alone. Many apps are built to keep you scrolling, so breaking the habit is hard on your own. Opening Detox shows you are ready to make a change.</p>
+            <p className="muted">Detox can help. It limits the apps that pull at you, shows you your real screen time, and gives you better things to do with the time you win back.</p>
             <div className="stack tight">
               {OBJECTIVES.map((o) => {
                 const Icon = OBJECTIVE_ICONS[o.id];
